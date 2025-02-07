@@ -1,11 +1,14 @@
 import React, { useRef, useState } from "react";
 import { login } from "../store/authSlice.jsx";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import apiClient from "../helpers/apiClient.jsx";
+import useLoading from "../hooks/useLoading.jsx";
 
 const Login = () => {
   const [error, setError] = useState("");
+  const { loading, setLoading } = useLoading();
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -14,6 +17,7 @@ const Login = () => {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     if (!email.current.value || !password.current.value) {
       setError("Please enter valid details");
@@ -28,11 +32,13 @@ const Login = () => {
       if (login.fulfilled.match(actionResult)) {
         navigate("/marketplace");
       } else {
-        setError("Login failed please try again");
+        setError(actionResult.payload || "Login failed please try again");
       }
     } catch (error) {
       console.log(error);
       setError("Login failed please try again");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,13 +61,22 @@ const Login = () => {
           className="block border-2 rounded-sm border-gray-100 placeholder-gray-100 focus:outline-gray-100 p-2 my-3 w-full"
           placeholder="Password"
         />
-        {error && <p className="text-red-600">{error}</p>}
-        <button className="w-full text-white py-2 my-3 px-4 bg-amber-900 cursor-pointer rounded">
-          Login
+        {error && (
+          <p className="text-red-600">
+            {typeof error === "object" ? error.message : error}
+          </p>
+        )}
+        <button
+          disabled={loading}
+          className="w-full text-white py-2 my-3 px-4 bg-amber-900 cursor-pointer rounded"
+        >
+          {loading ? "Trying..." : "Login"}
         </button>
         <p className="mt-2 text-center">
           Don't have an account?
-          <span className="cursor-pointer font-bold font-noto">Register</span>
+          <span className="cursor-pointer font-bold font-noto">
+            {<Link to="/register">Register</Link>}
+          </span>
         </p>
       </form>
     </div>

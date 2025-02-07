@@ -15,7 +15,7 @@ const initialState = {
 
 export const login = createAsyncThunk(
   "auth/login",
-  async ({ email, password }) => {
+  async ({ email, password }, { rejectWithValue }) => {
     try {
       const response = await apiClient.post("/signin", {
         email,
@@ -28,17 +28,18 @@ export const login = createAsyncThunk(
       localStorage.setItem("token", token);
       return { user, token };
     } catch (error) {
-      console.log("Error", error);
-      return error ? error.message : "Login failed. Please try again.";
+      return rejectWithValue(
+        error.message || "Login failed. Please try again."
+      );
     }
   }
 );
 
 export const verify = createAsyncThunk(
   "auth/verify",
-  async ({ verificationId, verificationCode }) => {
+  async ({ verificationId, verificationCode }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post("/api/verify", {
+      const response = await apiClient.post("/verify-email", {
         verificationId,
         verificationCode,
       });
@@ -49,27 +50,34 @@ export const verify = createAsyncThunk(
       localStorage.setItem("token", token);
       return { user, token };
     } catch (error) {
-      return error ? error.message : "Verification failed. Please try again.";
+      return rejectWithValue(
+        error.message || "Verification failed. Please try again."
+      );
     }
   }
 );
 
-export const checkAuth = createAsyncThunk("auth/checkAuth", async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const user = localStorage.getItem("user")
-      ? JSON.parse(localStorage.getItem("user"))
-      : null;
-    if (!token || !user) {
-      throw new Error("Not authenticated");
+export const checkAuth = createAsyncThunk(
+  "auth/checkAuth",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const user = localStorage.getItem("user")
+        ? JSON.parse(localStorage.getItem("user"))
+        : null;
+      if (!token || !user) {
+        throw new Error("Not authenticated");
+      }
+      return { user, token };
+    } catch (error) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      return rejectWithValue(
+        error.message || "Verification failed. Please try again."
+      );
     }
-    return { user, token };
-  } catch (error) {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    return error.message || "Failed to authenticate";
   }
-});
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -104,7 +112,6 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.fulfilled, (state, { payload }) => {
-        console.log("Inside Slice fulfilled", payload);
         state.status = "succeeded";
         state.auth = payload.user;
         state.token = payload.token;

@@ -39,7 +39,7 @@ const Header = () => {
                 <Link to="/login">Login</Link>
               </li>
               <li className="bg-amber-700 py-1 px-2 rounded-md cursor-pointer text-white">
-                Register
+                <Link to="/register">Register</Link>
               </li>
             </>
           )}

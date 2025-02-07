@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import Public from "../Pages/Public.jsx";
 import Landing from "../Pages/Landing.jsx";
 import Protected from "../Pages/Protected.jsx";
@@ -7,6 +7,8 @@ import Profile from "../Pages/Profile.jsx";
 import Login from "../Pages/Login.jsx";
 import MainLayout from "../Pages/MainLayout.jsx";
 import NotFound from "../Pages/ErrorElement.jsx";
+import Register from "../Pages/Register.jsx";
+import Verify from "../Pages/Verify.jsx";
 
 const appRouter = createBrowserRouter([
   {
@@ -24,8 +26,12 @@ const appRouter = createBrowserRouter([
             element: <Login />,
           },
           {
-            path: "/verify",
-            element: <Landing />,
+            path: "/register",
+            element: <Register />,
+          },
+          {
+            path: "/verify/:verificationId",
+            element: <Verify />,
           },
         ],
       },
