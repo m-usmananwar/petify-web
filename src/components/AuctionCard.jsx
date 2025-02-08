@@ -1,6 +1,24 @@
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { checkAuth } from "../store/authSlice";
+
 const AuctionCard = ({ auction }) => {
   const { id, name, tagline, age, color, expiryTime, medias, initialPrice } =
     auction;
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handlePlaceBidClick = async (id) => {
+    try {
+      const actionResult = await dispatch(checkAuth());
+      if (checkAuth.fulfilled(actionResult)) {
+        navigate(`/auction/${id}`);
+      } else {
+        navigate("/login");
+      }
+    } catch (error) {}
+  };
 
   return (
     <div className="group relative bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden sm:max-w-[350px] w-full">
@@ -71,7 +89,12 @@ const AuctionCard = ({ auction }) => {
               ${parseFloat(initialPrice).toFixed(2)}
             </p>
           </div>
-          <button className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 active:scale-95">
+          <button
+            onClick={() => {
+              handlePlaceBidClick(id);
+            }}
+            className="cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 active:scale-95"
+          >
             Place Bid
           </button>
         </div>

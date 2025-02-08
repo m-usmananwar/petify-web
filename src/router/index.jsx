@@ -6,9 +6,10 @@ import Marketplace from "../Pages/Marketplace.jsx";
 import Profile from "../Pages/Profile.jsx";
 import Login from "../Pages/Login.jsx";
 import MainLayout from "../Pages/MainLayout.jsx";
-import NotFound from "../Pages/ErrorElement.jsx";
+import ErrorElement from "../Pages/ErrorElement.jsx";
 import Register from "../Pages/Register.jsx";
 import Verify from "../Pages/Verify.jsx";
+import AuctionDetail from "../Pages/AuctionDetail.jsx";
 
 const appRouter = createBrowserRouter([
   {
@@ -46,10 +47,14 @@ const appRouter = createBrowserRouter([
             path: "/profile",
             element: <Profile />,
           },
+          {
+            path: "/auction/:id",
+            element: <AuctionDetail />,
+          },
         ],
       },
     ],
-    errorElement: <NotFound />,
+    errorElement: <ErrorElement />,
   },
 ]);
 
