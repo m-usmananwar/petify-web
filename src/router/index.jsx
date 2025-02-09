@@ -54,7 +54,7 @@ const appRouter = createBrowserRouter([
         ],
       },
     ],
-    // errorElement: <ErrorElement />,
+    errorElement: <ErrorElement />,
   },
 ]);
 
