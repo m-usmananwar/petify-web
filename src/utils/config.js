@@ -1,0 +1,6 @@
+const PUSHER_APP_KEY = import.meta.env.VITE_PUSHER_APP_KEY;
+const PUSHER_CHANNEL = import.meta.env.VITE_PUSHER_CHANNEL;
+const PUSHER_CLUSTER = import.meta.env.VITE_PUSHER_APP_CLUSTER;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+export { PUSHER_APP_KEY, PUSHER_CHANNEL, PUSHER_CLUSTER, API_BASE_URL };

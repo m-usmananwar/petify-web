@@ -1,9 +1,92 @@
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import useFetchSingleAuction from "../hooks/useFetchSingleAuction.jsx";
+import { BIDDABLE_TYPES } from "../utils/constant.jsx";
+import apiClient from "../helpers/apiClient.jsx";
+import BidCard from "../components/BidCard.jsx";
+import Pusher from "pusher-js";
+import {
+  API_BASE_URL,
+  PUSHER_APP_KEY,
+  PUSHER_CHANNEL,
+  PUSHER_CLUSTER,
+} from "../utils/config.js";
 
 const AuctionDetail = () => {
   const { id } = useParams();
   const { auction } = useFetchSingleAuction(id);
+  const [bids, setBids] = useState([]);
+  const [latestBid, setLatestBid] = useState(null);
+  const [pusher, setPusher] = useState(null);
+  const [pusherChannel, setPusherChannel] = useState(null);
+  const [pusherChannelName, setPusherChannelName] = useState(null);
+
+  if (!pusher) {
+    const pusherAuth = new Pusher(PUSHER_APP_KEY, {
+      cluster: PUSHER_CLUSTER,
+      channelAuthorization: {
+        endpoint: `${API_BASE_URL}/authenticate-pusher`,
+        transport: "ajax",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      },
+    });
+    setPusher(pusherAuth);
+  }
+
+  useEffect(() => {
+    fetchInitialBids(id);
+    subscribeChannel();
+
+    return () => unSubscribeChannel();
+  }, [id]);
+
+  const fetchInitialBids = async (auctionId) => {
+    try {
+      const params = {
+        biddableType: BIDDABLE_TYPES.Auction,
+        biddableId: auctionId,
+      };
+      const response = await apiClient.get("/bids", { params });
+      if (response?.data?.length) {
+        setBids(response.data);
+        setLatestBid(response.data[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching bids:", error);
+    }
+  };
+
+  const subscribeChannel = () => {
+    if (pusher) {
+      let channelName = `private-bid.${BIDDABLE_TYPES.Auction}.${id}`;
+      setPusherChannelName(channelName);
+      const channelPusher = pusher.subscribe(channelName);
+      setPusherChannel(channelPusher);
+
+      channelPusher.bind("pusher:subscription_error", function (status) {
+        console.log("Subscription Error:", status);
+      });
+
+      channelPusher.bind(`${PUSHER_CHANNEL}`, (data) => {
+        try {
+          setBids((prevState) => {
+            return [data.bid, ...prevState];
+          });
+        } catch (error) {
+          console.error("Error handling event:", error);
+        }
+      });
+    }
+  };
+
+  const unSubscribeChannel = () => {
+    if (pusherChannel) {
+      pusherChannel.unbind();
+      pusher.unsubscribe(pusherChannelName);
+    }
+  };
 
   if (!auction) return <p className="text-center mt-10">Loading...</p>;
 
@@ -74,7 +157,15 @@ const AuctionDetail = () => {
         <div className="md:w-1/3 space-y-6">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-2xl font-bold mb-2">Bids</h3>
-            <p className="text-gray-600">Coming soon</p>
+            {bids.length === 0 ? (
+              <p className="font-noto font-lg">No bids</p>
+            ) : (
+              <div className="flex flex-col space-y-2">
+                {bids.map((b) => (
+                  <BidCard key={`${b.amount}-${b.id}`} bid={b} />
+                ))}
+              </div>
+            )}
           </div>
           {!is_own && (
             <button className="w-full cursor-pointer bg-amber-600 text-white py-3 px-4 rounded-lg shadow-lg hover:bg-amber-700 transition">
