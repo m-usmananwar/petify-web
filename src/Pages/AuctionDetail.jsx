@@ -113,8 +113,8 @@ const AuctionDetail = () => {
 
     try {
       const data = {
-        biddleableType: BIDDABLE_TYPES.Auction,
-        biddleableId: auction?.id,
+        biddableType: BIDDABLE_TYPES.Auction,
+        biddableId: auction?.id,
         amount: bidAmount,
       };
       const response = await apiClient.post("/bids", data);
