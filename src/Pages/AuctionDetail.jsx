@@ -16,10 +16,13 @@ const AuctionDetail = () => {
   const { id } = useParams();
   const { auction } = useFetchSingleAuction(id);
   const [bids, setBids] = useState([]);
-  const [latestBid, setLatestBid] = useState(null);
+  const [minimumBidAmount, setMinimumBidAmount] = useState(null);
   const [pusher, setPusher] = useState(null);
   const [pusherChannel, setPusherChannel] = useState(null);
   const [pusherChannelName, setPusherChannelName] = useState(null);
+  const [bidError, setBidError] = useState(null);
+
+  const bidRef = useRef(null);
 
   if (!pusher) {
     const pusherAuth = new Pusher(PUSHER_APP_KEY, {
@@ -51,7 +54,9 @@ const AuctionDetail = () => {
       const response = await apiClient.get("/bids", { params });
       if (response?.data?.length) {
         setBids(response.data);
-        setLatestBid(response.data[0]);
+        setMinimumBidAmount(response?.data[0]?.amount);
+      } else {
+        setMinimumBidAmount(auction?.initialPrice);
       }
     } catch (error) {
       console.error("Error fetching bids:", error);
@@ -74,6 +79,7 @@ const AuctionDetail = () => {
           setBids((prevState) => {
             return [data.bid, ...prevState];
           });
+          setMinimumBidAmount(data.bid.amount);
         } catch (error) {
           console.error("Error handling event:", error);
         }
@@ -89,6 +95,35 @@ const AuctionDetail = () => {
   };
 
   if (!auction) return <p className="text-center mt-10">Loading...</p>;
+
+  const placeBidSubmit = async (e) => {
+    e.preventDefault();
+    const bidAmount = bidRef.current.value;
+    if (!bidAmount) {
+      setBidError("Please enter right value");
+      return;
+    }
+
+    if (bidAmount < minimumBidAmount) {
+      setBidError(
+        `The minimum bidding amount is ${parseInt(minimumBidAmount + 1)}`
+      );
+      return;
+    }
+
+    try {
+      const data = {
+        biddleableType: BIDDABLE_TYPES.Auction,
+        biddleableId: auction?.id,
+        amount: bidAmount,
+      };
+      const response = await apiClient.post("/bids", data);
+    } catch (error) {
+      //Todo handle errors gracefully
+    } finally {
+      bidRef.current.value = null;
+    }
+  };
 
   const {
     age,
@@ -168,9 +203,20 @@ const AuctionDetail = () => {
             )}
           </div>
           {!is_own && (
-            <button className="w-full cursor-pointer bg-amber-600 text-white py-3 px-4 rounded-lg shadow-lg hover:bg-amber-700 transition">
-              Bid Now
-            </button>
+            <>
+              <form onSubmit={placeBidSubmit} className="flex space-x-2 ">
+                <input
+                  ref={bidRef}
+                  type="number"
+                  className="px-4 py-2 border-amber-500 bg-white rounded-md"
+                />
+                <button className="w-full cursor-pointer bg-amber-600 text-white py-3 px-4 rounded-lg shadow-lg hover:bg-amber-700 transition">
+                  Bid Now
+                </button>
+              </form>
+
+              {bidError && <p className="text-red-500">{bidError}</p>}
+            </>
           )}
         </div>
       </div>
