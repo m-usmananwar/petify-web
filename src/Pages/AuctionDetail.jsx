@@ -45,6 +45,12 @@ const AuctionDetail = () => {
     return () => unSubscribeChannel();
   }, [id]);
 
+  useEffect(() => {
+    if (auction && !bids.length) {
+      setMinimumBidAmount(auction.initialPrice);
+    }
+  }, [auction]);
+
   const fetchInitialBids = async (auctionId) => {
     try {
       const params = {
@@ -55,11 +61,9 @@ const AuctionDetail = () => {
       if (response?.data?.length) {
         setBids(response.data);
         setMinimumBidAmount(response?.data[0]?.amount);
-      } else {
-        setMinimumBidAmount(auction?.initialPrice);
       }
     } catch (error) {
-      console.error("Error fetching bids:", error);
+      //Todo handle errors gracefully
     }
   };
 
@@ -105,9 +109,9 @@ const AuctionDetail = () => {
     }
 
     if (bidAmount < minimumBidAmount) {
-      setBidError(
-        `The minimum bidding amount is ${parseInt(minimumBidAmount + 1)}`
-      );
+      const minimumAmount = parseInt(minimumBidAmount) + 1;
+      setBidError(`The minimum bidding amount is ${minimumAmount}`);
+      bidRef.current.value = minimumAmount;
       return;
     }
 
@@ -122,6 +126,7 @@ const AuctionDetail = () => {
       //Todo handle errors gracefully
     } finally {
       bidRef.current.value = null;
+      if (bidError) setBidError(null);
     }
   };
 
