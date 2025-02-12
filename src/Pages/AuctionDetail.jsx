@@ -108,8 +108,8 @@ const AuctionDetail = () => {
       return;
     }
 
-    if (bidAmount < minimumBidAmount) {
-      const minimumAmount = parseInt(minimumBidAmount) + 1;
+    const minimumAmount = parseInt(minimumBidAmount) + 1;
+    if (bidAmount < minimumAmount) {
       setBidError(`The minimum bidding amount is ${minimumAmount}`);
       bidRef.current.value = minimumAmount;
       return;
