@@ -2,11 +2,13 @@ import React, { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import apiClient from "../helpers/apiClient.jsx";
 import useLoading from "../hooks/useLoading.jsx";
+import { useToast } from "../context/ToasterContext.jsx";
 
 const Register = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { loading, setLoading } = useLoading();
+  const { showToast } = useToast();
 
   const firstName = useRef(null);
   const lastName = useRef(null);
@@ -49,8 +51,12 @@ const Register = () => {
       });
 
       const verificationId = response?.data?.verificationId;
+      const successMessage = response?.data?.message;
+      showToast(successMessage);
       if (verificationId) navigate(`/verify/${verificationId}`);
     } catch (error) {
+      const errorMessage = error?.response?.data?.message;
+      showToast(errorMessage, "error");
       setError("Registration failed please try again");
     } finally {
       setLoading(false);

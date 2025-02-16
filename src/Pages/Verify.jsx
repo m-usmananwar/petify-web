@@ -3,12 +3,15 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { verify } from "../store/authSlice.jsx";
 import { useDispatch } from "react-redux";
 import useLoading from "../hooks/useLoading.jsx";
+import { useToast } from "../context/ToasterContext.jsx";
 
 const Verify = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, setLoading } = useLoading();
+
+  const { showToast } = useToast();
 
   const { verificationId } = useParams();
 
@@ -31,11 +34,14 @@ const Verify = () => {
       );
 
       if (verify.fulfilled.match(actionResult)) {
+        const successMessage =
+          actionResult?.payload?.message || "User authenticated successfully";
+        showToast(successMessage);
         navigate("/marketplace");
       } else {
-        setError(
-          actionResult.payload || "Verification failed please try again"
-        );
+        const errorMessage =
+          actionResult.payload || "Login failed please try again";
+        showToast(errorMessage, "error");
       }
     } catch (error) {
       setError("Verification failed please try again");

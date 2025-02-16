@@ -2,12 +2,14 @@ import React, { useRef, useState } from "react";
 import { login } from "../store/authSlice.jsx";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import apiClient from "../helpers/apiClient.jsx";
 import useLoading from "../hooks/useLoading.jsx";
+import { useToast } from "../context/ToasterContext.jsx";
 
 const Login = () => {
   const [error, setError] = useState("");
   const { loading, setLoading } = useLoading();
+
+  const { showToast } = useToast();
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -30,12 +32,16 @@ const Login = () => {
       );
 
       if (login.fulfilled.match(actionResult)) {
+        const successMessage =
+          actionResult?.payload?.message || "User authenticated successfully";
+        showToast(successMessage);
         navigate("/marketplace");
       } else {
-        setError(actionResult.payload || "Login failed please try again");
+        const errorMessage =
+          actionResult.payload || "Login failed please try again";
+        showToast(errorMessage, "error");
       }
     } catch (error) {
-      console.log(error);
       setError("Login failed please try again");
     } finally {
       setLoading(false);
