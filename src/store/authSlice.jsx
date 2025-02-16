@@ -11,25 +11,29 @@ const initialState = {
   token: tokenFromStorage,
   status: "idle",
   error: null,
+  message: null,
 };
 
 export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post("/signin", {
+      let response = await apiClient.post("/signin", {
         email,
         password,
       });
 
-      const user = response.data;
-      const token = user.token;
+      const responseData = response.data;
+      const user = responseData.data;
+      const token = responseData.data.token;
+      const message = responseData.message;
+
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
-      return { user, token };
+      return { user, token, message };
     } catch (error) {
       return rejectWithValue(
-        error.message || "Login failed. Please try again."
+        error?.response?.data?.message || "Login failed. Please try again."
       );
     }
   }
@@ -39,19 +43,23 @@ export const verify = createAsyncThunk(
   "auth/verify",
   async ({ verificationId, verificationCode }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post("/verify-email", {
+      let response = await apiClient.post("/verify-email", {
         verificationId,
         verificationCode,
       });
-      const user = response.data;
-      const token = user.token;
+
+      const responseData = response.data;
+      const user = responseData.data;
+      const token = responseData.data.token;
+      const message = responseData.message;
 
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
-      return { user, token };
+      return { user, token, message };
     } catch (error) {
       return rejectWithValue(
-        error.message || "Verification failed. Please try again."
+        error?.response?.data?.message ||
+          "Verification failed. Please try again."
       );
     }
   }
@@ -115,6 +123,7 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.auth = payload.user;
         state.token = payload.token;
+        state.message = payload.message;
       })
       .addCase(login.rejected, (state, { payload }) => {
         state.status = "failed";
@@ -128,6 +137,7 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.auth = payload.user;
         state.token = payload.token;
+        state.message = payload.message;
       })
       .addCase(verify.rejected, (state, { payload }) => {
         state.status = "failed";

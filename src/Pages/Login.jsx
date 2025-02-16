@@ -32,13 +32,16 @@ const Login = () => {
       );
 
       if (login.fulfilled.match(actionResult)) {
-        showToast("User authenticated successfully");
+        const successMessage =
+          actionResult?.payload?.message || "User authenticated successfully";
+        showToast(successMessage);
         navigate("/marketplace");
       } else {
-        setError(actionResult.payload || "Login failed please try again");
+        const errorMessage =
+          actionResult.payload || "Login failed please try again";
+        showToast(errorMessage, "error");
       }
     } catch (error) {
-      console.log(error);
       setError("Login failed please try again");
     } finally {
       setLoading(false);
